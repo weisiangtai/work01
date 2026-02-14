@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PENDING_REVIEW
+  CONFIRMED
+  FULFILLED
+  CANCELED
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+  name        String
+  slug        String      @unique
+  description String
+  price       Int
+  isActive    Boolean     @default(true)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Order {
+  id                   Int         @id @default(autoincrement())
+  orderNumber          String      @unique
+  customerName         String
+  customerContact      String
+  status               OrderStatus @default(PENDING_PAYMENT)
+  totalAmount          Int
+  paymentLast5Digits   String?
+  paymentTransferTime  String?
+  paymentNote          String?
+  adminNote            String?
+  deliveryChannel      String?
+  deliveryDestination  String?
+  fulfilledAt          DateTime?
+  orderItems           OrderItem[]
+  createdAt            DateTime    @default(now())
+  updatedAt            DateTime    @updatedAt
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Int
+  createdAt DateTime @default(now())
+}
